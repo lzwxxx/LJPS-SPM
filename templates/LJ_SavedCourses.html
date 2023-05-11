@@ -1,0 +1,261 @@
+<style>
+    #viewLJ {
+        font-weight: bold;
+    }
+</style>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
+
+    <script>
+        current_location = window.location.href
+        position = current_location.lastIndexOf("/")
+        const lj_id = current_location.substring(position + 1)
+
+        //console.log(lj_id)
+
+        function deleteCourse(element) {
+
+            $('#myModal1').modal({
+                show: true
+            });
+
+            $("#myModal2").on('show.bs.modal', function (e) {
+                $("#myModal1").modal("hide");
+
+                console.log(element.value)
+
+                $.ajax({
+                    type: "DELETE",
+                    cache: false,
+                    url: "/delete_learning_journey_course/" + lj_id + "/" + element.value,
+                    success: function (data) {
+
+                        $("#modalTitle2").text("Removed Course from Learning Journey Successfully");
+
+                        $("#modalBody2").text("Course has been removed from Learning Journey.");
+
+                        $('#myModal2').on('hidden.bs.modal', function (e) {
+                            location.reload()
+                        })
+                    },
+                    error: function (error) {
+                        $("#modalTitle2").text("Removed Course from Learning Journey Unsuccessfully");
+                        $("#modalBody2").text(error["responseJSON"]["message"]);
+                    }
+                });
+            });
+        }
+
+        function closeModal() {
+            $('#myModal`').on('hide.bs.modal', function () {
+                location.reload();
+            })
+
+            $('#myModal1').on('hide.bs.modal', function () {
+                location.reload();
+            })
+        }
+    </script>
+
+    <!-- Website Title -->
+    <title>My Learning Journey - Saved courses</title>
+</head>
+
+<body>
+    {% include "nav.html" %}
+
+    <div class="container-fluid py-4">
+        {% if error|length > 0 %}
+        <div class="alert alert-danger text-center">{{ error['message'] }}</div>
+        {% else %}
+        {% if learningjourneycourses['code']==200 %}
+        <div class="row pb-3">
+            <div class="col-10 pt-2">
+                <h3>Learning Journey {{position}}</h3>
+                <div class="h5 pt-2">Role Name: {{role_name}} | Skill Name: {{skill_name}}</div>
+            </div>
+            <div class="col-md-2">
+                <a class="btn btn-primary sm-md-lg mt-4 " href="/getCoursesFromLj/{{lj_id}}" id="AddCourse">Add
+                    Courses</a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <table class="table table-hover">
+                    <thead>
+                        <tr style="background-color:#7ca8c8; color:#fff;">
+                            <th scope="col" style="width: 85%;">Courses Saved</th>
+                            <th scope="col">Action(s)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course_info, each_course in course_data %}
+                        <tr>
+                            <td>
+                                <h4 class="pb-1">
+                                    {{each_course['course_id']}} | {{each_course['course_name']}}
+                                </h4>
+
+                                <section style="background-color:#e5eff5; padding: 2px;">
+                                    <p style="font-size:16px; margin-top:13px;">
+                                        <!-- Completion Status & Registration Status -->
+                                        {% if course_info['completion_status']=="Completed" and
+                                        course_info['reg_status']=="Registered" %}
+                                        <span class="font-weight-bold">
+                                            Registration Status:
+                                        </span>
+                                        <span class="badge badge-success">{{course_info['reg_status']}}</span>
+                                        <span class="font-weight-bold">
+                                            | Completion Status:
+                                        </span>
+                                        <span class="badge badge-success">{{course_info['completion_status']}}</span>
+                                        {% elif course_info['completion_status']=="OnGoing" and
+                                        course_info['reg_status']=="Registered" %}
+                                        <span class="font-weight-bold">
+                                            Registration Status:
+                                        </span>
+                                        <span class="badge badge-success">{{course_info['reg_status']}}</span>
+                                        <span class="font-weight-bold">
+                                            | Completion Status:
+                                        </span>
+                                        <span class="badge badge-warning">{{course_info['completion_status']}}</span>
+                                        {% elif course_info['completion_status']=="Not Started" and
+                                        course_info['reg_status']=="Waitlist" %}
+                                        <span class="font-weight-bold">
+                                            Registration Status:
+                                        </span>
+                                        <span class="badge badge-info">{{course_info['reg_status']}}</span>
+                                        <span class="font-weight-bold">
+                                            | Completion Status:
+                                        </span>
+                                        <span class="badge badge-danger">{{course_info['completion_status']}}</span>
+                                        {% elif course_info['completion_status']=="Not Started" and
+                                        course_info['reg_status']=="Registered" %}
+                                        <span class="font-weight-bold">
+                                            Registration Status:
+                                        </span>
+                                        <span class="badge badge-success">{{course_info['reg_status']}}</span>
+                                        <span class="font-weight-bold">
+                                            | Completion Status:
+                                        </span>
+                                        <span class="badge badge-danger">{{course_info['completion_status']}}</span>
+                                        {% else %}
+                                        <span class="font-weight-bold">
+                                            Registration Status:
+                                        </span>
+                                        <span class="badge badge-danger">{{course_info['reg_status']}}</span>
+                                        <span class="font-weight-bold">
+                                            | Completion Status:
+                                        </span>
+                                        <span class="badge badge-danger">{{course_info['completion_status']}}</span>
+                                        {% endif %}
+                                        <br>
+                                    </p>
+                                    <p>
+                                        <span class="font-weight-bold">
+                                            Course Type:
+                                        </span>
+                                        {{each_course['course_type']}} |
+                                        <span class="font-weight-bold">
+                                            Course Category:
+                                        </span>
+                                        {{each_course['course_category']}}
+                                    </p>
+
+                                    <p>
+                                        <span class="font-weight-bold">
+                                            Course Description:
+                                        </span>
+                                        {{each_course['course_desc']}}
+                                    </p>
+                                </section>
+                            </td>
+                            <td class="align-middle">
+                                {% if course_info['completion_status']!="Completed"%}
+                                <button class="btn btn-danger viewCourses" role="button"
+                                    value="{{course_info['ljc_id']}}" onClick="return deleteCourse(this)">Remove
+                                    Course</button>
+                                {% endif %}
+                                <input type="text" id="staff_id" value="{{staff_id}}" hidden>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% endif %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="row mt-3 mb-3">
+            <div class="col-md">
+                <button type="submit" class="btn btn-danger" id="back" style="padding:5px 30px;">
+                    Back to View all Learning Journey
+                </button>
+            </div>
+        </div>
+
+
+        <div class="modal" id="myModal1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="modalTitle1">Confirmation</h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true"
+                            onClick="return closeModal()"></button>
+                    </div>
+                    <div class="container"></div>
+                    <div class="modal-body" id="modalBody1">
+                        Are you sure you want to remove the course from the learning journey?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary px-4 py-2 mx-2" data-dismiss="modal"
+                            onClick="return closeModal()">No</button>
+                        <button type="button" class="btn btn-primary px-4 py-2 mx-2" data-toggle="modal"
+                            href="#myModal2">Yes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="myModal2" data-backdrop="static">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="modalTitle2"></h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
+                    </div>
+                    <div class="container"></div>
+                    <div class="modal-body" id="modalBody2">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary px-4 py-2 mx-2"
+                            data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script>
+    // For back button
+    const element = document.getElementById("back");
+    let staff_id = parseInt(document.getElementById("staff_id").value);
+    // print(staff_id)
+    element.addEventListener("click", function () {
+
+        replace_url = '/my_learning_journey/' + staff_id;
+        // console.log(replace_url)
+
+        window.location.replace(replace_url)
+    });
+
+
+</script>

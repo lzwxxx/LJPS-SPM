@@ -1,0 +1,233 @@
+<style>*/
+
+    .container {
+        margin-top: 30px;
+        margin-bottom: 30px;
+    }
+
+    #SkillsNav {
+        font-weight: bold;
+    }
+</style>
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>LJPS - Skills Management</title>
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
+    
+    <script>
+        $(function () {
+            //click on edit button 
+            let editList = document.getElementsByClassName("edit");
+            for (var i = 0; i < editList.length; i++) {
+                editList[i].addEventListener("click", function (item) {
+                    //console.log(item.target.value);
+                    current_location = window.location.href
+                    //console.log(current_location)
+                    position = current_location.lastIndexOf("/")
+                    //console.log(position)
+                    origin = current_location.substring(0, position + 1)
+                    //console.log(origin)
+                    //console.log(item.target.value)   
+
+                    // redirect to the edit skill page for that particular skill_id
+                    window.location.replace(origin + "edit_skill/" + item.target.value)
+                });
+            }
+        })
+
+        // delete button 
+        function convertFormToJSON(element) {
+            let json = JSON.parse('{"skill_id": "' + element + '"}')
+
+            return json;
+        }
+
+        function showValue(element) {
+            console.log(element.value);
+            var payload = convertFormToJSON(element.value)
+            console.log(payload)
+
+            $('#myModal1').modal({
+                show: true
+            })
+
+            $("#myModal2").on('show.bs.modal', function (e) {
+                $("#myModal1").modal("hide");
+
+                $.ajax({
+                    type: "PUT",
+                    cache: false,
+                    url: "/delete_skill/" + element.value,
+                    data: JSON.stringify(payload), // serializes the form's elements.
+                    dataType: "json",
+                    contentType: "application/json",
+                    success: function (data) {
+                        //console.log(data)
+                        $("#modalTitle").text("Delete Skill Successfully");
+
+                        $(".modal-body").text("The skill has been deleted successfully.");
+
+                        $('#myModal2').on('hidden.bs.modal', function (e) {
+                            location.reload()
+                        })
+                    },
+                    error: function (error) {
+                        $("#modalTitle").text("Delete Skill Unsuccessfully");
+                        $(".modal-body").text(error["responseJSON"]["message"]);
+                    }
+                });
+            });
+        }
+
+        // Make skill available button
+        function skill_avail(element) {
+            var payload = convertFormToJSON(element.value)
+            console.log(payload)
+            //console.log(element.value)
+            $.ajax({
+              type: "PUT",
+              cache: false,
+              url: "/make_skill_available/" + element.value,
+              data: JSON.stringify(payload), 
+              dataType: "json",
+              contentType: "application/json",
+              success: function (data) {
+                console.log(data)
+                $('#myModal2').modal({
+                    show: true
+                  });
+                if(data['code'] == 200){
+                  $("#modalTitle").text("Make Deleted Skill Available is Successful");
+                  $(".modal-body").text(data['message']);
+                }
+                else{
+                  $("#modalTitle").text("Make Deleted Skill Available is Unsuccessful");
+                  $(".modal-body").text(data['message']);
+                }
+                $('#myModal2').on('hidden.bs.modal', function (e) {
+                    window.location = '/skills';
+                })
+              },
+              error: function (error) {
+               alert(error)
+              }
+          });
+        }
+
+        function closeModal(){
+                $('#myModal3').on('hide.bs.modal', function() {
+                    location.reload();
+                })
+                $('#myModal1').on('hide.bs.modal', function() {
+                    location.reload();
+                })
+        }
+    </script>
+</head>
+
+<body class="bg-light">
+    {% include "nav.html" %}
+
+    <div id="main-container" class="container-fluid py-4">
+        <div class="row">
+            <div class="col-md-10">
+                <h2>Skills</h2>
+            </div>
+            <!-- Add a skill button -->
+            <div class="col-md-2">
+                <a type="button" href="/create_skill" class="mb-2 btn btn-primary">Add Skill</a>
+              </div>
+        </div>
+        <br>
+
+        <div class="row">
+            <div class="col">
+                {% if skill_info['code'] == 404 %}
+                <div class="alert alert-danger text-center">{{ skill_info['message'] }}</div>
+                {% endif %}
+
+                {% if skill_info['code'] == 500 %}
+                <div class="alert alert-danger">{{ skill_info['message'] }}</div>
+                {% endif %}
+
+                <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr style="background-color:#7ca8c8; color:#fff;">
+                            <th scope="col" style="width: 80%;">Skill Name</th>
+                            <th scope="col">Action(s)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if skill_info['code'] == 200 %}
+                        {% for info in skill_info['data']['skills'] %}
+                            {% if info['is_skill_deleted'] == false %}
+                            <tr>
+                                <th class="align-middle" style="font-size: 20px;">{{ info['skill_name'] }}</th>
+                                <td>
+                                    <button class="btn btn-info edit px-4 py-2 m-2" role="button" value="{{info['skill_id']}}">Edit Skill</button>
+                                    <button class="btn btn-danger px-4 py-2 m-2" id="delete" role="button" onClick="return showValue(this)"
+                                        value="{{info['skill_id']}}">Delete Skill</button>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            
+                            {% if info['is_skill_deleted'] == true %}
+                            <tr class="table-active">
+                                <th class="align-middle" style="font-size: 20px;">{{ info['skill_name'] }}</th>
+                                <td>
+                                    <button class="btn btn-success px-4 py-2 m-2" value="{{info['skill_id']}}" onclick="skill_avail(this)" role="button">Make Skill Available</button>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        {% endfor %}     
+                        {% endif %}
+                    </tbody>
+                </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="myModal1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Confirmation</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true" onClick="return closeModal()">×</button>
+                </div>
+                <div class="container1"></div>
+                <div class="modal-body">
+                    Are you sure you want to delete this skill?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary px-4 py-2 mx-2" data-dismiss="modal" onClick="return closeModal()">No</button>
+                    <button type="button" class="btn btn-primary px-4 py-2 mx-2" data-toggle="modal"
+                        href="#myModal2">Yes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="myModal2" data-backdrop="static">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="modalTitle"></h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true" onClick="return closeModal()">×</button>
+                </div>
+                <div class="container1"></div>
+                <div class="modal-body">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary px-4 py-2 mx-2" data-dismiss="modal" onClick="return closeModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

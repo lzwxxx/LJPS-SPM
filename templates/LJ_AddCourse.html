@@ -1,0 +1,265 @@
+<style>
+    #main-container {
+      margin-top: 50px;
+      margin-bottom: 50px;
+    }
+
+    #viewLJ {
+        font-weight: bold;
+    }
+  </style>  
+  
+  <!doctype html>
+  <html lang="en">
+    <head>
+      <title>LJPS - Course Management</title>
+      <script type="text/javascript" src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
+
+    </head>
+
+    <body class="bg-light">
+      {% include "nav.html" %}
+      <!--<div id="nav-placeholder"></div>-->
+      <!-- Course container which should access the course database to retrieve a list of courses to be displayed as rows-->
+      <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col">
+                <h2>Add Course</h2>
+                <h4>Learning Journey {{position}}</h4>
+            </div>
+        </div>
+        <br>
+        <form id="add_course_form">
+        <div class="row">
+            <div class="col">
+              {% if error|length > 0 %}
+                {% for err_msge in error %}
+                <div class="alert alert-danger text-center">{{ err_msge }}</div>
+                {% endfor %}
+              {% endif %}
+
+              <div class="table-responsive">
+              <table class="table align-middle">
+                <thead>
+                  <tr style="background-color:#7ca8c8; color:#fff;">
+                    <th scope="col">Course ID | Course Name</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for course in display_course_list %}
+                  <tr>
+                    {% if course['inLj'] == True %}
+                    <th style="font-size: 20px;">
+                        {{course['course_id']}} | {{ course['course_name'] }}<br> 
+                        <span class="badge badge-secondary">Added to Learning Journey</span> 
+                    </th>
+                    
+                    {% else %}
+                    <!-- <th style="font-size: 20px;">{{course['course_id']}} | {{ course['course_name'] }}<br>
+                        <span class="badge badge-success">{{ course['course_status'] }}</span>
+                    </th> -->
+                    <th style="font-size: 20px;">{{course['course_id']}} | {{ course['course_name'] }}<br>
+                        <p style="font-size:16px;font-weight:normal;"><span>
+                            Registration Status:
+                        </span>
+                        {% if course['reg_status'] == 'Registered' %}
+                         <span class="badge badge-success">{{course['reg_status']}}</span>
+                        {% elif course['reg_status'] == 'Waitlist' %}
+                         <span class="badge badge-info">{{course['reg_status']}}</span>
+                         {% else %}
+                         <span class="badge badge-danger">{{course['reg_status']}}</span>
+                         {% endif %}
+                         <br>
+                         <span>
+                            Completion Status:
+                        </span>
+                        {% if course['completion_status'] == 'completed' %}
+                        <span class="badge badge-success">{{course['completion_status']}}</span>
+                       {% elif course['completion_status'] == 'OnGoing' %}
+                        <span class="badge badge-warning">{{course['completion_status']}}</span>
+                        {% else %}
+                        <span class="badge badge-danger">{{course['completion_status']}}</span>
+                        {% endif %}
+                        </p>
+                    </th>
+                    {% endif %}
+                    <td style="font-size: 20px;">{{ course['course_desc'] }}</td>
+                    <td style="font-size: 20px;">{{ course['course_type'] }}</td>
+                    <td style="font-size: 20px;">{{ course['course_category'] }}</td>
+                    
+                    {% if course['inLj'] == False %}
+                    <td class=" d-flex justify-content-center">
+                        <input id="checkbox" type="checkbox" value="{{course['course_id']}}"
+                        onClick="return select_this(this)">
+                    </td>
+                    {% endif %}
+                  </tr>
+                  
+                  {% endfor %}
+        
+                </tbody>
+                </table>
+                </div>
+            </div>
+        </div>
+        <br>
+    </form>
+        <div class="row mt-3 mb-3 d-flex justify-content-md-between">
+            <div class="col-md-9">
+                <button type="submit" class="btn btn-danger px-4 py-2 my-2" id="back">
+                    Back to Learning Journey Details
+                </button>
+            </div>
+            
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary px-4 py-2 my-2" id="add_course" form="add_course_form"> 
+                    Add Courses to Learning Journey
+                </button>
+            </div>
+        </div>
+    
+        <div class="modal" id="myModal1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Confirmation</h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true" onClick="return closeModal()">×</button>
+                    </div>
+                    <div class="container1"></div>
+                    <div class="modal-body">
+                        Are you sure you want to add this course?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary px-4 py-2 mx-2" data-dismiss="modal" onClick="return closeModal()">No</button>
+                        <button type="button" class="btn btn-primary px-4 py-2 mx-2" data-toggle="modal"
+                            href="#myModal2">Yes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <div class="modal" id="myModal2" data-backdrop="static">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="modalTitle"></h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                </div>
+                <div class="container1"></div>
+                <div class="modal-body">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary px-4 py-2 mx-2" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </body>
+  </html>
+
+<script>
+    //back button
+    $("#myModal2").modal("hide");
+    current_location = window.location.href
+    position = current_location.lastIndexOf("/")
+    const lj_id = current_location.substring(position + 1);
+    document.getElementById("back").addEventListener("click", function () {
+        replace_url = '/selectSavedLearningJourney/' + lj_id
+        console.log(replace_url)
+
+        window.location.replace(replace_url)
+    });
+
+    // Array to store *course_id* of selected courses
+    var selected_course_array = new Array();
+    function select_this(element) {
+
+        console.log(element.checked);
+        console.log(element.value);
+
+        if (element.checked == true) {
+            selected_course_array.push(element.value);
+        }
+        else {
+            for (let i = 0; i < selected_course_array.length; i++) {
+                if (selected_course_array[i] == element.value) {
+                    selected_course_array.splice(i, i + 1);
+                }
+            }
+        }
+        // return selected_course_array
+        console.log(selected_course_array);
+    }
+
+    function convertFormToJSON(form) {
+        current_location = window.location.href
+        position = current_location.lastIndexOf("/")
+        const lj_id = current_location.substring(position + 1);
+        let json = JSON.parse('{ "lj_id": "' + lj_id + '" ,"selected_course_id": "' + selected_course_array + '"}')
+        return json
+    }
+
+    function closeModal(){
+                $('#myModal1').on('hide.bs.modal', function() {
+                    location.reload();
+                })
+            }
+    
+    $("#add_course_form").submit(function (e) {
+        e.preventDefault();  // avoid to execute the actual submit of the form
+        var form = $(this);
+        if(selected_course_array.length == 0){
+            $("#myModal2").modal("show");
+            $("#modalTitle").text("No courses has been selected");
+            $(".modal-body").text("Please select at least 1 course to add into your learning journey");
+            $('#myModal2').on('hidden.bs.modal', function (e) {
+                $("#myModal2").modal("hide");
+            })
+        }
+        else{
+        var actionUrl = form.attr('action');
+        var payload = convertFormToJSON(form)
+        console.log(payload)
+
+        $('#myModal1').modal({
+                show: true
+        })
+
+        $("#myModal2").on('show.bs.modal', function (e) {
+                $("#myModal1").modal("hide");
+                $(".modal-body").text("");
+                $.ajax({
+                        type: "POST",
+                        cache: false,
+                        url: "/add_course_to_lj",
+                        data: JSON.stringify(payload),
+                        dataType: "json",
+                        contentType: "application/json",
+                        success: function () {
+                            $("#myModal2").modal("show");
+                            $("#modalTitle").text("Course(s) added to Learning Journey Successfully");
+
+                            $(".modal-body").text("Course(s) has been added to Learning Journey successfully.");
+                            $('#myModal2').on('hidden.bs.modal', function (e) {
+                                // redirect to view all my learning journey page
+
+                                window.location = '/selectSavedLearningJourney/' + lj_id;
+                            })
+                        },
+                        error: function (error) {
+                            $("#modalTitle").text("Courses added to Learning Journey Unsuccessful");
+                            console.log(error)
+                            $(".modal-body").text(error["responseJSON"]["message"]);
+                            $(".modal-body").css('color', 'red')
+                        }
+                    });
+                })
+            }
+        });
+</script>
+ 

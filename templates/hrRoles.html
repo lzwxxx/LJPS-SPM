@@ -1,0 +1,229 @@
+<style>
+  #RolesNav {
+    font-weight: bold;
+  }
+</style>
+
+<!doctype html>
+<html lang="en">
+
+<head>
+  <title>LJPS - Role Management</title>
+
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
+
+<script>
+    $(function () {
+      //click on edit button 
+      let editList = document.getElementsByClassName("edit");
+      for (var i = 0; i < editList.length; i++) {
+        editList[i].addEventListener("click", function (item) {
+          current_location = window.location.href
+          position = current_location.lastIndexOf("/")
+          origin = current_location.substring(0, position + 1)
+          window.location.replace(origin + "edit_role/" + item.target.value)
+        });
+      }
+    })
+
+    $(function () {
+      let assignList = document.getElementsByClassName("assign");
+      for (var i = 0; i < assignList.length; i++) {
+        assignList[i].addEventListener("click", function (item) {
+          current_location = window.location.href
+          position = current_location.lastIndexOf("/")
+          origin = current_location.substring(0, position + 1)
+          window.location.replace(origin + "assign_skills_to_role/" + item.target.value)
+        });
+      }
+    })
+
+    function convertFormToJSON(element) {
+      let json = JSON.parse('{"role_id": "' + element + '"}')
+      return json;
+    }
+
+    function deleteRole(element) {
+      var payload = convertFormToJSON(element.value)
+
+      $('#myModal1').modal({
+        show: true
+      });
+
+      $("#myModal2").on('show.bs.modal', function (e) {
+        $("#myModal1").modal("hide");
+     
+        $.ajax({
+          type: "PUT",
+          cache: false,
+          url: "/delete_role/" + element.value,
+          data: JSON.stringify(payload), // serializes the form's elements.
+          dataType: "json",
+          contentType: "application/json",
+          success: function (data) {
+            $("#modalTitle").text("Delete Role Successfully");
+            $(".modal-body").text("The role has been deleted successfully");
+            $('#myModal2').on('hidden.bs.modal', function (e) {
+              location.reload()
+            })
+
+          },
+          error: function (error) {
+            $("#modalTitle").text("Delete Role Unsuccessfully");
+            $(".modal-body").text(error["responseJSON"]["message"]);
+          }
+        });
+
+      });
+
+    }
+
+    function roleAvail(element) {
+      var payload = convertFormToJSON(element.value)
+      console.log(payload)
+      $.ajax({
+        type: "PUT",
+        cache: false,
+        url: "/makeRoleAvailable/" + element.value,
+        data: JSON.stringify(payload), 
+        dataType: "json",
+        contentType: "application/json",
+        success: function (data) {
+          console.log(data)
+          $('#myModal2').modal({
+              show: true
+            });
+          if(data['code'] == 200){
+            $("#modalTitle").text("Successfully make Deleted Role Available");
+            $(".modal-body").text(data['message']);
+          }
+          else{
+            $("#modalTitle").text("Make Deleted Role Available Unsuccessful");
+            $(".modal-body").text(data['message']);
+          }
+          $('#myModal2').on('hidden.bs.modal', function (e) {
+              window.location = '/roles';
+          })
+        },
+        error: function (error) {
+         alert(error)
+        }
+      });
+    }
+
+    function closeModal(){
+      $('#myModal1').on('hide.bs.modal', function() {
+        location.reload();
+      })
+
+      $('#myModal2').on('hide.bs.modal', function() {
+        location.reload();
+      })
+  }
+  
+  </script>
+
+</head>
+
+<body class="bg-light">
+  {% include "nav.html" %}
+  <div class="container-fluid py-4">
+    <div class="row">
+      <div class="col-md-10">
+        <h2>Roles</h2>
+      </div>
+      <div class="col-md-2">
+        <a type="button" href="/displayAddRole" class="mb-2 btn btn-primary">Add Role</a>
+      </div>
+    </div>
+    <br>
+
+    <div class="row">
+      <div class="col">
+        {% if roles_info['code'] == 404 %}
+        <div class="alert alert-danger text-center">{{ roles_info['message'] }}</div>
+        {% endif %}
+
+        {% if roles_info['code'] == 500 %}
+        <div class="alert alert-danger text-center">{{ roles_info['message'] }}</div>
+        {% endif %}
+
+        <table class="table table-hover">
+          <thead>
+              <tr style="background-color:#7ca8c8; color:#fff;">
+                  <th scope="col" style="width: 85%" >Role Name</th>
+                  <th scope="col" >Action(s)</th>
+              </tr>
+          </thead>
+          <tbody>
+            {% if roles_info['code'] == 200 %}
+            {% for info in roles_info['data']['roles'] %}           
+              {% if info['is_role_deleted'] == false %}
+              <tr>
+                <th class="align-middle" style="font-size: 20px;">{{ info['role_name'] }}</th>
+                <td>
+                  <button class="btn btn-primary assign px-4 py-2 m-2" role="button" value="{{info['role_id']}}">Assign Skills</button>
+                  <button class="btn btn-info edit px-4 py-2 m-2" role="button" value="{{info['role_id']}}">Edit Role</button>
+                  <button class="btn btn-danger px-4 py-2 m-2" id="delete" role="button" onClick="return deleteRole(this)"
+                    value="{{info['role_id']}}">Delete Role</button>
+                </td>
+              </tr>            
+              {% endif %}
+              
+              {% if info['is_role_deleted'] == true %}
+              <tr class="table-active">
+                <th class="align-middle" style="font-size: 20px;">{{ info['role_name'] }}</th>
+                <td>
+                  <button class="btn btn-success px-4 py-2 m-2" value="{{info['role_id']}}" onclick="roleAvail(this)" role="button">
+                    Make Role Available</button>
+                </td>
+              </tr>
+              {% endif %}
+            {% endfor %}
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="modal" id="myModal1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title">Confirmation</h4>
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true" onClick="return closeModal()">×</button>
+          </div>
+          <div class="container"></div>
+          <div class="modal-body">
+            Are you sure you want to delete this role?
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary px-4 py-2 mx-2" data-dismiss="modal" onClick="return closeModal()">No</button>
+            <button type="button" class="btn btn-primary px-4 py-2 mx-2" data-toggle="modal" href="#myModal2" >Yes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="myModal2" data-backdrop="static">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="modalTitle"></h4>
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true" onClick="return closeModal()">×</button>
+          </div>
+          <div class="container"></div>
+          <div class="modal-body">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary px-4 py-2 mx-2" data-dismiss="modal" onClick="return closeModal()">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+
+</html>

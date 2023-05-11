@@ -1,0 +1,202 @@
+<style>
+
+  #SkillsNav {
+      font-weight: bold;
+  }
+</style>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ 
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
+
+
+    <!-- Website Title -->
+    <title>LJPS HR Add Skill</title>
+    <!-- navbar -->
+    <!-- <div id="nav-placeholder"></div> -->
+</head>
+
+<body>
+    {% include "nav.html" %}
+
+    <div class="container-fluid py-4">
+      <div class="row">
+        <div class="col">
+          <h3>Add Skill</h3>
+        </div>
+      </div>
+
+    <br>
+    <div class="row justify-content-between align-items-center py-1 mb-2 ">
+        <div class="col">
+          <form id="add_skill">
+            <div class="form-group row mt-3 mx-auto">
+              <label for="skill_name" class="col-sm-2 col-form-label">Skill Name</label>
+              <div class="col-sm-10">
+                <input type="text" class="form-control" id="skill_name" name="skill_name" placeholder="Enter Skill Name">
+              </div>
+            </div>
+            <div  class="form-group row float-right mx-auto">
+                <button value="Add Skill"  type="submit" class="mr-3 btn btn-primary">Add Skill</button>
+            </div>
+          </form>
+        </div>
+    </div>
+    </div>
+
+</body>
+
+<!-- Modal for Add skills -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+aria-hidden="true">
+<div class="modal-dialog" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="close btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+    </div>
+</div>
+</div>
+</html>
+
+<script>  
+  function convertFormToJSON(form) {
+    const array = form.serializeArray(); // Encodes the set of form elements as an array of names and values.
+    const json = {};
+    $.each(array, function () {
+        json[this.name] = this.value || "";
+    });
+    return json;
+}
+
+
+current_location = window.location.href
+//console.log(current_location)
+//position = current_location.lastIndexOf("/")
+position_1 = current_location.indexOf("edit_skill")
+//console.log(position)
+redirect_location = current_location.substring(0, position_1 - 1) + "/skills"
+//console.log(redirect_location)
+
+$('#add_skill').submit(function (e) {
+  e.preventDefault(); // avoid to execute the actual submit of the form.
+
+  var form = $(this);
+  var actionUrl = form.attr('action');
+
+  var payload = convertFormToJSON(form)
+  console.log(payload)
+
+  $.ajax({
+      type: "POST",
+      cache: false,
+      url: "/add_skill",
+      data: JSON.stringify(payload), // serializes the form's elements.
+      dataType: "json",
+      contentType: "application/json",
+      success: function(data) {
+        console.log(data)
+
+        // 1. if skill is created successfully
+        if (data['code'] == 201) {
+          $('#exampleModal').modal({
+            show: true
+          });
+          $("#exampleModalLabel").text("Congratulations!");
+  
+          $(".modal-body").text("Skill has been created successfully.");
+  
+          $(".close").click(function () {
+              $('#exampleModal').modal('hide')
+          })
+  
+          $('#exampleModal').on('hidden.bs.modal', function (e) {
+              window.location.replace(redirect_location)
+          })
+        }
+
+        // 2. if skill already exists in db
+        else if (data['code'] == 400) {
+          $('#exampleModal').modal({
+            show: true
+          });
+          $("#exampleModalLabel").text("Skill name already exists.");
+  
+          $(".modal-body").text("Please use another skill name.");
+  
+          $(".close").click(function () {
+              $('#exampleModal').modal('hide')
+          })
+  
+          $('#exampleModal').on('hidden.bs.modal', function (e) {
+              window.location.replace(current_location)
+          })
+        }
+
+        // 3. if skill is an empty input
+        else if (data['code'] == 401) {
+            $('#exampleModal').modal({
+              show: true
+            });
+            $("#exampleModalLabel").text("Field required is empty.");
+    
+            $(".modal-body").text("Unable to create skill.");
+    
+            $(".close").click(function () {
+                $('#exampleModal').modal('hide')
+            })
+    
+            $('#exampleModal').on('hidden.bs.modal', function (e) {
+                window.location.replace(current_location)
+            })
+          }
+
+        // 4. if skill is less than 3 characters
+        else if (data['code'] == 402) {
+          $('#exampleModal').modal({
+            show: true
+          });
+          $("#exampleModalLabel").text("Skill name must be more than 3 characters.");
+  
+          $(".modal-body").text("Unable to create skill.");
+  
+          $(".close").click(function () {
+              $('#exampleModal').modal('hide')
+          })
+  
+          $('#exampleModal').on('hidden.bs.modal', function (e) {
+              window.location.replace(current_location)
+          })
+        }
+
+        // 5. if skill is more than 256 characters
+        else if (data['code'] == 403) {
+          $('#exampleModal').modal({
+            show: true
+          });
+          $("#exampleModalLabel").text("Skill name must be less than 256 characters.");
+  
+          $(".modal-body").text("Unable to create skill.");
+  
+          $(".close").click(function () {
+              $('#exampleModal').modal('hide')
+          })
+  
+          $('#exampleModal').on('hidden.bs.modal', function (e) {
+              window.location.replace(current_location)
+          })
+        }
+      }
+});
+});
+</script>

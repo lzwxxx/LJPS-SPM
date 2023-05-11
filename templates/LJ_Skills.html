@@ -1,0 +1,105 @@
+<style>
+    #setLJ {
+      font-weight: bold;
+    }
+</style>
+  
+<!doctype html>
+<html lang="en">
+  
+<head>
+  <title>LJPS - Set Learning Journey - Select Skill</title>
+  
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
+
+  
+</head>
+
+<body class="bg-light">
+    {% include "nav.html" %}
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col align-self-start">
+                <h3>Step 2: Select a Skill for <span style="color: #447cae">{{role_name}}</span></h3>
+            </div>
+        </div>
+      <br>
+      <div class="row">
+        <div class="col">
+            {% if error|length > 0 %}
+            <div class="alert alert-danger text-center">{{ error['message'] }}</div>
+            {% endif %}
+
+            {% if skills|length > 0  %}
+            <table class="table table-hover">
+                <thead>
+                    <tr style="background-color:#7ca8c8; color:#fff;">
+                        <th scope="col" style="width: 85%;">Skills Required</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody>                 
+                    {% for skill in skills %}
+                    <tr>
+                        {% if skill['acquired'] == false %}
+                        <th class="align-middle" style="font-size: 20px;">{{ skill['skill_name'] }} <span class="badge badge-danger">Not Acquired Yet</span></th>
+                        
+                        <td>
+                          <button class="btn btn-primary px-3 py-2 viewCourses" role="button" value="{{ skill['skill_id'] }}">View Courses</button>
+                          <input type="text" value="{{role_id}}" id="role_id" hidden>
+                        </td>
+                        {% endif %}
+
+                        {% if skill['acquired'] == true %}
+                        <th class="align-middle" style="font-size: 20px;">{{ skill['skill_name'] }} <span class="badge badge-success">Skill Acquired</span></th>
+                        {% endif %}
+                        
+                    </tr>
+                    {% endfor %}                   
+                </tbody>
+            </table>
+            {% endif %}
+
+        </div>    
+    </div>
+    <br>
+    <div class="row">
+        <div class="col">
+            <button type="submit" class="btn btn-danger back px-4 py-2" id="back" style="float:left;">
+                Back to Role Selection
+            </button>
+        </div>
+    </div>
+</body>
+
+<script>
+    // for View Course Button
+    $(function () {
+      let view_courses = document.getElementsByClassName("viewCourses");
+      //console.log(view_courses)
+
+      for (var i = 0; i < view_courses.length; i++) {
+        view_courses[i].addEventListener("click", function (item) {
+              let role_id = document.getElementById("role_id").value
+              current_location = window.location.href
+              position = current_location.lastIndexOf("/")
+              origin = current_location.substring(0, position - 11)
+              replace_url = origin + "selectCourse/" + role_id + "/" +item.target.value
+
+              // redirect to the select courses page for that particular skill_id
+              window.location.replace(replace_url)
+          });
+      }
+  })
+
+  $(function () {
+        const element = document.getElementById("back");
+        element.addEventListener("click", function (item) {
+            replace_url = "/selectRole";
+            window.location.replace(replace_url)
+        });
+    });
+
+</script>
+
+</html>

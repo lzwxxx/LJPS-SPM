@@ -1,0 +1,304 @@
+<style>
+    #setLJ {
+        font-weight: bold;
+    }
+</style>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
+
+
+    <!-- Website Title -->
+    <title>Learning Journey - Select courses</title>
+    <!-- navbar -->
+    <!-- <div id="nav-placeholder"></div> -->
+</head>
+
+<body class="bg-light">
+    {% include "nav.html" %}
+
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col">
+                <h3>Step 3: Select Courses for <span style="color: #447cae">{{skill_name}}</span></h3>
+            </div>
+        </div>
+        <br>
+        <div class="row">
+            <div class="col">
+                {% if error|length == 1 %}
+                <div class="alert alert-danger text-center">{{ error['message'] }}
+                </div>
+                {% else %}
+
+                <table class="table table-hover">
+                    <thead>
+                        <tr style="background-color:#7ca8c8; color:#fff;">
+                            <th scope="col" style="width: 85%;">Courses to Acquire</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <form id="save_lj">
+                        <input type="text" value="{{skill_id}}" id="skill_id" hidden>
+                        <input type="text" value="{{role_id}}" id="role_id" hidden>
+                        <input type="text" value="{{staff_id}}" id="staff_id" hidden>
+
+                        <tbody>
+                            {% if course_of_skill['code'] == 200 %}
+                            {% for each_course in course_details_of_skill_list %}
+                            {% if each_course['completion_status'] == "OnGoing" %}
+                            <tr>
+                                <td>
+                                    <h5>
+                                        {{each_course['course_id']}} | {{each_course['course_name']}}
+                                        <br> <span class="my-2 badge badge-warning">Ongoing </span>
+                                    </h5>
+                                    {% endif %}
+
+                                    {% if each_course['completion_status'] == "Completed" %}
+                            <tr>
+                                <td>
+                                    <h5>
+                                        {{each_course['course_id']}} | {{each_course['course_name']}}
+                                        <br> <span class="my-2 badge badge-success">Completed </span>
+                                    </h5>
+                                    {% endif %}
+
+                                    {% if each_course['reg_status'] == "Registered" %}
+                                    {% if each_course['completion_status'] == '' %}
+                            <tr>
+                                <td>
+                                    <h5>
+                                        {{each_course['course_id']}} | {{each_course['course_name']}}
+                                        <br> <span class="my-2 badge badge-warning">Registered</span>
+                                    </h5>
+                                    {% endif %}
+                                    {% endif %}
+
+                                    {% if each_course['reg_status'] == "Waitlist" %}
+                                    {% if each_course['completion_status'] == '' %}
+                            <tr>
+                                <td>
+                                    <h5>
+                                        {{each_course['course_id']}} | {{each_course['course_name']}}
+                                        <br> <span class="my-2 badge badge-primary">Waitlist</span>
+                                    </h5>
+                                    {% endif %}
+                                    {% endif %}
+
+                                    {% if each_course['completion_status'] == "Not Started" %}
+                            <tr>
+                                <td>
+                                    <h5>
+                                        {{each_course['course_id']}} | {{each_course['course_name']}}
+                                        <br> <span class="my-2 badge badge-info">*Available to register!*</span>
+                                    </h5>
+                                    {% endif %}
+                                    <section class="my-2 p-2" style="background-color:#e5eff5;">
+                                        <p>
+                                            <span class="font-weight-bold">
+                                                Course Type:
+                                            </span>
+                                            {{each_course['course_type']}} |
+                                            <span class="font-weight-bold">
+                                                Course Category:
+                                            </span>
+                                            {{each_course['course_category']}}
+                                        </p>
+
+                                        <p>
+                                            <span class="font-weight-bold">
+                                                Course Description:
+                                            </span>
+                                            {{each_course['course_desc']}}
+                                        </p>
+                                    </section>
+                                </td>
+
+                                <!-- checkbox -->
+                                {% if each_course['completion_status'] == "Not Started" %}
+                                <td class="align-middle pl-4">
+                                    <input id="checkbox" type="checkbox" value="{{each_course['course_id']}}"
+                                        onClick="return select_this(this)">
+                                </td>
+                                {% endif %}
+                            </tr>
+                        </tbody>
+                        {% endfor %}
+                        {% endif %}
+                    </form>
+                </table>
+                {% endif %}
+            </div>
+        </div>
+        <br>
+        <!-- back & save Buttons -->
+        <div class="row mt-3 mb-3 d-flex justify-content-md-between">
+            <div class="col-md-10">
+                <button type="submit" class="btn btn-danger px-4 py-2 my-2" id="back">
+                    Back to Skill Selection
+                </button>
+            </div>
+
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary px-4 py-2" id="save_lj_btn" form="save_lj"> Save Learning
+                    Journey
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Confirmation -->
+    <div class="modal" id="myModal1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Confirmation</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true" onClick="return closeModal()">×</button>
+                </div>
+                <div class="container1"></div>
+                <div class="modal-body">
+                    Are you sure you want to save this learning journey?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary px-4 py-2 mx-2" data-dismiss="modal" onClick="return closeModal()">No</button>
+                    <button type="button" class="btn btn-primary px-4 py-2 mx-2" data-toggle="modal"
+                        href="#myModal2">Yes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal" id="myModal2" data-backdrop="static">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="modalTitle"></h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                </div>
+                <div class="container1"></div>
+                <div class="modal-body">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="exit btn btn-secondary px-4 py-2 mx-2" data-dismiss="modal" onclick="closeFunction()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+<script>
+    // Array to store *course_id* of selected courses
+    var selected_course_array = new Array();
+    function select_this(element) {
+
+        console.log(element.checked);
+        console.log(element.value);
+
+        if (element.checked == true) {
+            selected_course_array.push(element.value);
+        }
+        else {
+            for (let i = 0; i < selected_course_array.length; i++) {
+                if (selected_course_array[i] == element.value) {
+                    selected_course_array.splice(i, i + 1);
+                }
+            }
+        }
+        // return selected_course_array
+        console.log(selected_course_array);
+    }
+
+    function closeFunction() {
+        window.location.reload()
+    }
+
+    function convertFormToJSON(form) {
+        let role_id = document.getElementById("role_id").value
+        // console.log(role_id)
+        let skill_id = document.getElementById("skill_id").value
+        // console.log(skill_id)
+        let json = JSON.parse('{ "role_id": "' + role_id + '", "skill_id": "' + skill_id + '","selected_course_id": "' + selected_course_array + '"}')
+        // console.log(json)
+        return json
+    }
+
+    function closeModal(){
+                $('#myModal1').on('hide.bs.modal', function() {
+                    location.reload();
+                })
+            }
+
+    $("#save_lj").submit(function (e) {
+        e.preventDefault();  // avoid to execute the actual submit of the form
+        var form = $(this);
+
+        if (selected_course_array.length == 0) {
+            $("#myModal2").modal("show");
+            $("#modalTitle").text("Save Learning Journey Unsuccessful");
+            $(".modal-body").text("Please select at least 1 course to add into your learning journey");
+            $('#myModal2').on('hidden.bs.modal', function (e) {
+                $("#myModal2").modal("hide");
+            })
+        } else {
+            var actionUrl = form.attr('action');
+
+            var payload = convertFormToJSON(form)
+            console.log(payload)
+
+            let staff_id = document.getElementById("staff_id").value
+
+            $('#myModal1').modal({
+                show: true
+            })
+
+            $("#myModal2").on('show.bs.modal', function (e) {
+                $("#myModal1").modal("hide");
+                $(".modal-body").text("");
+                $.ajax({
+                    type: "POST",
+                    cache: false,
+                    url: "/save_learning_journey",
+                    data: JSON.stringify(payload),
+                    dataType: "json",
+                    contentType: "application/json",
+                    success: function () {
+                        $("#myModal2").modal("show");
+                        $("#modalTitle").text("Save Learning Journey Successfully");
+
+                        $(".modal-body").text("Learning Journey has been saved successfully.");
+
+                        $('#myModal2').on('hidden.bs.modal', function (e) {
+                            // redirect to view all my learning journey page
+                            window.location = '/my_learning_journey/' + staff_id;
+                        })
+                    },
+                    error: function (error) {
+                        
+                        $("#modalTitle").text("Save Learning Journey Unsuccessful");
+                        $(".modal-body").text(error["responseJSON"]["message"]);
+                    }
+                });
+            })
+
+        }
+    });
+
+
+    // FOr back button
+    const element = document.getElementById("back");
+    const role_id = document.getElementById("role_id").value;
+    element.addEventListener("click", function () {
+        replace_url = '/selectSkill/' + role_id
+        console.log(replace_url)
+
+        window.location.replace(replace_url)
+    });
+
+</script>

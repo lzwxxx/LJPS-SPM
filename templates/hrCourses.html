@@ -1,0 +1,94 @@
+
+  <style>
+    #main-container {
+      margin-top: 50px;
+      margin-bottom: 50px;
+    }
+
+    #CoursesNav {
+      font-weight: bold;
+    }
+  </style>  
+  
+  <!doctype html>
+  <html lang="en">
+    <head>
+      <title>LJPS - Course Management</title>
+      <script type="text/javascript" src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
+      
+      <script>
+        // $(function () {
+        //     let assignList = document.getElementsByClassName("assign");
+        //     for (var i = 0; i < assignList.length; i++) {
+        //         assignList[i].addEventListener("click", function (item) {
+        //         //console.log(item.target.value);
+        //             current_location = window.location.href
+        //             //console.log(current_location)
+        //             position = current_location.lastIndexOf("/")
+        //             //console.log(position)
+        //             origin = current_location.substring(0, position + 1)
+        //             console.log(item.target.value)
+        //             //console.log(origin)
+        //             window.location.replace(origin + "assign_skills_to_course/" + item.target.value)
+        //         });
+        //     }
+        // })
+      </script>
+
+    </head>
+
+    <body class="bg-light">
+      {% include "nav.html" %}
+      <!--<div id="nav-placeholder"></div>-->
+      <!-- Course container which should access the course database to retrieve a list of courses to be displayed as rows-->
+      <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col">
+                <h2>Courses</h2>
+            </div>
+        </div>
+        <br>
+        
+        <div class="row">
+            <div class="col">
+              {% if course_info['code'] == 404 %}
+              <div class="alert alert-danger text-center">{{ course_info['message'] }}</div>
+              {% endif %}
+
+              {% if course_info['code'] == 500 %}
+              <label>{{course_info['message']}}</label>
+              {% endif %}
+
+              <table class="table table-responsive align-middle table-hover">
+                <thead>
+                  <tr style="background-color:#7ca8c8; color:#fff;">
+                    <th scope="col">Course ID | Course Name</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% if course_info['code']==200 %}
+                  {% for info in course_info['data']['courses'] %}
+                  <tr>
+                    <th style="font-size: 20px;">{{info['course_id']}} | {{ info['course_name'] }}<br> <span class="badge badge-success my-2">{{ info['course_status'] }}</span></th>
+                    <td style="font-size: 20px;">{{ info['course_desc'] }}</td>
+                    <td style="font-size: 20px;">{{ info['course_type'] }}</td>
+                    <td style="font-size: 20px;">{{ info['course_category'] }}</td>
+                    <td>
+                      <a class="btn btn-primary px-4 py-2 mx-2 assign" href="/assign_skills_to_course/{{info['course_id']}}" role="button">Assign Skills</a>
+                    </td>
+                  </tr>
+                  
+                  {% endfor %}
+                  {% endif %}
+                </tbody>
+                </table>
+            </div>
+        </div>
+
+
+    </body>
+  </html>

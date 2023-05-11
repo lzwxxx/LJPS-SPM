@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>LJPS - Assign Skills to Role</title>
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
+
+    <script>
+        current_location = window.location.href
+        position = current_location.lastIndexOf("/")
+        role_id = current_location.substring(position + 1)
+
+        //For assigning a skill to a role
+        function assignSkill(element) {
+
+            $('#myModal1').modal({
+                show: true
+            });
+
+            $("#myModal2").on('show.bs.modal', function (e) {
+                $("#myModal1").modal("hide");
+
+                $.ajax({
+                    type: "POST",
+                    cache: false,
+                    url: "/add_skill_role/" + role_id + "/" + element.value,
+                    success: function (data) {
+                        $("#modalTitle2").text("Assigned Skill to Role Successfully");
+                        $("#modalBody2").text("The skill has been assigned to the role successfully");
+                        $('#myModal2').on('hidden.bs.modal', function (e) {
+                            location.reload()
+                        })
+                    },
+                    error: function (error) {
+                        $("#modalTitle2").text("Assigned Skill to Role Unsuccessfully");
+                        $("#modalBody2").text(error["responseJSON"]["message"]);
+                    }
+
+                });
+            });
+        }
+
+        //For deleting the assignment of a skill to a role 
+        function deleteAssignedSkill(element) {
+
+            $('#myModal3').modal({
+                show: true
+            });
+
+            $("#myModal4").on('show.bs.modal', function (e) {
+                $("#myModal3").modal("hide");
+
+                $.ajax({
+                    type: "DELETE",
+                    cache: false,
+                    url: "/delete_skill_role/" + role_id + "/" + element.value,
+                    success: function (data) {
+                        $("#modalTitle4").text("Removed Assignment of Skill to Role Successfully");
+                        $("#modalBody4").text("The assignment of the skill to the role has been removed successfully");
+                        $('#myModal4').on('hidden.bs.modal', function (e) {
+                            location.reload()
+                        })
+                    },
+                    error: function (error) {
+                        $("#modalTitle4").text("Removed Assignment of Skill to Role Unsuccessfully");
+                        $("#modalBody4").text(error["responseJSON"]["message"]);
+                    }
+
+                });
+            });
+        }
+
+        function closeModal(){
+             $('#myModal3').on('hide.bs.modal', function() {
+                location.reload();
+            })
+            
+            $('#myModal1').on('hide.bs.modal', function() {
+                location.reload();
+            })
+        }
+
+        $(function () {
+            const element = document.getElementById("back");
+            element.addEventListener("click", function (item) {
+                replace_url = "/roles";
+                window.location.replace(replace_url)
+            });
+        });
+
+    </script>
+</head>
+
+<body>
+    {% include "nav.html" %}
+    <!--Assigning skills to role-->
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col align-self-start">
+                <h3>Assign Skills to <span style="color: #447cae">{{role_info["data"]["role_name"]}}</span></h3>
+            </div>
+        </div>
+        <br>
+        <div class="row">
+            <div class="col-md-6">
+                {% if assigned_info['code'] == 404 %}
+                <div class="alert alert-danger" role="alert">
+                    {{assigned_info['message']}}
+                </div>
+                {% endif %}
+                {% if assigned_info['code'] == 500 %}
+                <div class="alert">{{ assigned_info['message'] }}</div>
+                {% endif %}
+                
+                <table class="table table-responsive-sm table-hover">
+                    {% if assigned_info['code'] == 200 %}
+                    <thead>
+                        <tr style="background-color:#7ca8c8; color:#fff;">
+                            <th scope="col" style="width: 80%;">Assigned Skills</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for assigned_skill_info in skills_assigned["skills_assigned"]%}
+                        <tr>
+                            <th class="align-middle" style="font-size: 20px;">{{assigned_skill_info["skill_name"]}}</th>
+                            <td><button class="btn btn-danger px-4 py-2 mx-2 remove" type="submit"
+                                    value="{{assigned_skill_info['skill_id']}}"
+                                    onClick="return deleteAssignedSkill(this)">Remove</button></td>
+                        </tr>
+                        {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+
+            </div>
+            <div class="col-md-6">
+                <!--Alert message to show when there is no available skills-->
+                {% if skills_unassigned["skills_unassigned"]|length < 1 %}
+                <div class="alert alert-danger" role="alert">
+                    No skill available for this role.
+                </div>
+                {% else %}
+                <table class="table table-responsive-sm table-hover">
+                    <thead>
+                        <tr style="background-color:#7ca8c8; color:#fff;">
+                            <th scope="col" style="width:80%;">Available Skills</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for unassigned_skill_info in skills_unassigned["skills_unassigned"]%}
+                        <tr>
+                            <th class="align-middle" style="font-size: 20px;">{{unassigned_skill_info["skill_name"]}}</th>
+                            <td><button class="btn btn-success px-4 py-2 mx-2" type="submit"
+                                    value="{{unassigned_skill_info['skill_id']}}"
+                                    onClick="return assignSkill(this)">Assign</button></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+            </div>
+        </div>
+        <br>
+        <div class="row">
+            <div class="col">
+                <button type="submit" class="btn btn-danger back px-4 py-2" id="back" style="padding:5px 30px; float:left;">
+                    Back to Roles Management
+                </button>
+            </div>
+        </div>
+
+        <div class="modal" id="myModal1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="modalTitle1">Confirmation</h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true" onClick="return closeModal()"></button>
+                    </div>
+                    <div class="container"></div>
+                    <div class="modal-body" id="modalBody1">
+                        Are you sure you want to assign this skill to this role?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary px-4 py-2 mx-2" data-dismiss="modal" onClick="return closeModal()">No</button>
+                        <button type="button" class="btn btn-primary px-4 py-2 mx-2" data-toggle="modal"
+                        href="#myModal2">Yes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="myModal2" data-backdrop="static">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="modalTitle2"></h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
+                    </div>
+                    <div class="container"></div>
+                    <div class="modal-body" id="modalBody2">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary px-4 py-2 mx-2" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="myModal3">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="modalTitle3">Confirmation</h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true" onClick="return closeModal()">×</button>
+                    </div>
+                    <div class="container"></div>
+                    <div class="modal-body" id="modalTitle3">
+                        Are you sure you want to remove the assignment of this skill to this role?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary px-4 py-2 mx-2" data-dismiss="modal" onClick="return closeModal()">No</button>
+                        <button type="button" class="btn btn-primary px-4 py-2 mx-2" data-toggle="modal"
+                        href="#myModal4">Yes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="myModal4" data-backdrop="static">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="modalTitle4"></h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    </div>
+                    <div class="container"></div>
+                    <div class="modal-body" id="modalBody4">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary px-4 py-2 mx-2" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>
+
+<!--<script src="https://code.jquery.com/jquery-1.10.2.js"></script>-->

@@ -1,0 +1,236 @@
+<style>
+    #viewLJ {
+        font-weight: bold;
+    }
+</style>
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>LJPS - Skills Management</title>
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
+    <script>
+        function removeLJ(element) {
+            $('#myModal1').modal({
+                    show: true
+            });
+
+            $("#myModal2").on('show.bs.modal', function (e) {
+                $("#myModal1").modal("hide");
+
+                $.ajax({
+                    type: "DELETE",
+                    cache: false,
+                    url: "/delete_lj/" + element.value,
+                    success: function (data) {
+                        //console.log(data["data"])
+                        $("#modalTitle").text("Deleted Learning Journey Successfully");
+
+                        $(".modal-body").text("The learning journey has been deleted successfully");
+
+                        $('#myModal2').on('hidden.bs.modal', function (e) {
+                            location.reload()
+                        })
+                    },
+                    error: function (error) {
+                        //console.log(error["responseJSON"]["message"])
+                        $("#modalTitle").text("Deleted Learning Journey Unsuccessfully");
+                        //$(".modal-body").text("Unable to update course name");
+                        $(".modal-body").text(error["responseJSON"]["message"]);
+                    }
+
+                });
+            });
+        }
+        function closeModal(){
+                $('#myModal1').on('hide.bs.modal', function() {
+                    location.reload();
+                })
+        }
+    </script>
+</head>
+
+<body class="bg-light">
+    {% include "nav.html" %}
+
+    <div class="container-fluid py-4" >
+        <div class="row">
+            <div class="col-md-10">
+                <h3>My Learning Journey</h3>
+            </div>
+            <br>
+            <!-- set learning journey button -->
+            <div class="col-md-2 ">
+                <a type="button" href="/selectRole" class="btn btn-primary">Set Learning Journey</a>
+            </div>
+        </div>
+
+        <br>
+        <div class="row">
+            <div class="col">
+                {% if error|length > 0 %}
+                <div class="alert alert-danger text-center">{{ error['message'] }}
+                </div>
+                {% else %}
+                <table class="table table-hover">
+                    <thead>
+                        <tr style="background-color:#7ca8c8; color:#fff;">
+                            <th scope="col" style="width: 85%;">Learning Journey</th>
+                            <th scope="col">Action(s)</th>
+                        </tr>
+                    </thead>
+        
+                    <tbody>
+        
+                        {% if error|length == 0 %}
+                        {% if learningjourney['code'] == 200 %}
+                        {% for info in new_learningjourney %}
+                            {% if info['is_learningjourney_completed'] == false %}
+                            {% if info['completion_status'] == "Not Started" %}
+                            <tr>
+                                <td>
+                                    <h5 class="align-middle"> Learning Journey {{ info['counter'] }}
+                                        <br>
+                                        <span class="my-2 badge badge-info">*New*</span>
+                                    </h5>
+                                    <section class="my-2 p-2" style="background-color:#e5eff5;">
+                                        <p class="align-middle" style="font-size: 16px;"> <span style="font-weight:bold;">Role:</span> {{info['role_name']}}
+                                        </p>
+            
+                                        <p class="align-middle" style="font-size:16px;"> <span style="font-weight:bold; ">Skill Acquired:</span> {{info['skill_name']}}
+                                        </p>
+            
+            
+                                        <p class="align-middle" style="font-size:16px;"> <span style="font-weight:bold; ">No. of Courses:</span> {{info['course_count']}} </p>    
+                                    </section> 
+                                </td>
+                                
+                                <td class="align-middle">
+                                    <button class="btn btn-info viewDetails px-3 py-2 m-2" role="button" value="{{info['lj_id']}}">View Details</button>
+                                    <button class="btn btn-danger px-3 py-2 m-2" id="delete" role="button" value="{{info['lj_id']}}" onClick="return removeLJ(this)">Delete</button>
+                                    <input type="text" value="{{info['lj_id']}}" id="lj_id" hidden>
+                                </td>
+                            </tr>
+                            {% endif %}
+        
+                            {% if info['completion_status'] != "Not Started" %}
+                            <tr>
+                                <td>
+                                    <h5 class="align-middle"> Learning Journey {{ info['counter'] }}
+                                        <br>
+                                        <span class="my-2 badge badge-Warning">Ongoing</span>
+                                    </h5>
+                                    <section class="my-2 p-2" style="background-color:#e5eff5;">
+                                        <p class="align-middle" style="font-size: 16px;"> <span style="font-weight:bold;">Role:</span> {{info['role_name']}}
+                                        </p>
+            
+                                        <p class="align-middle" style="font-size:16px;"> <span style="font-weight:bold; ">Skill Acquired:</span> {{info['skill_name']}}
+                                        </p>
+            
+            
+                                        <p class="align-middle" style="font-size:16px;"> <span style="font-weight:bold; ">No. of Courses:</span> {{info['course_count']}} </p>    
+                                    </section>  
+                                </td>
+                                
+                                <td class="align-middle">
+                                    <button class="btn btn-info viewDetails px-3 py-2 m-2" role="button" value="{{info['lj_id']}}">View Details</button>
+                                    <button class="btn btn-danger px-3 py-2 m-2" id="delete" role="button" value="{{info['lj_id']}}" onClick="return removeLJ(this)">Delete</button>
+                                    <input type="text" value="{{info['lj_id']}}" id="lj_id" hidden>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% endif %}
+        
+                            {% if info['is_learningjourney_completed'] == true %}
+                            <tr>
+                                <td>
+                                    <h5 class="align-middle"> Learning Journey {{ info['lj_id'] }}
+                                        <br>
+                                        <span class="my-2 badge badge-success">Completed</span>
+                                    </h5>
+                                    <section class="my-2 p-2" style="background-color:#e5eff5;">
+                                    <p class="align-middle" style="font-size:16px;"> <span style="font-weight:bold;">Role:</span> {{info['role_name']}}
+                                    </p>
+        
+                                    <p class="align-middle" style="font-size: 16px;"> <span style="font-weight:bold; ">Skill Acquired:</span> {{info['skill_name']}}
+                                    </p>
+        
+                                    <p class="align-middle" style="font: size 16px;"> <span style="font-weight:bold; ">No. of Courses:</span> {{info['course_count']}} </p>  
+                                    </section>
+                                </td>
+                                
+                                <td class="align-middle">
+                                    <button class="btn btn-info viewDetails px-3 py-2 m-2" role="button" value="{{info['lj_id']}}">View Details</button>
+                                    <button class="btn btn-danger px-3 py-2 m-2" id="delete" role="button" value="{{info['lj_id']}}" onClick="return removeLJ(this)">Delete</button>
+                                    <input type="text" value="{{info['lj_id']}}" id="lj_id" hidden>
+                                </td>
+                            </tr>
+                            {% endif %}
+        
+                        {% endfor %}     
+                        {% endif %}
+                        {% endif %}
+        
+                        </tbody>
+                    </table>
+                    {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="myModal1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Confirmation</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true" onClick="return closeModal()" >×</button>
+                </div>
+                <div class="container"></div>
+                <div class="modal-body">
+                    Are you sure you want to remove this learning journey?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary px-4 py-2 mx-2" data-dismiss="modal" onClick="return closeModal()" >No</button>
+                    <button type="button" class="btn btn-primary px-4 py-2 mx-2" data-toggle="modal"
+                        href="#myModal2">Yes</button>               
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="myModal2" data-backdrop="static">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="modalTitle"></h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                </div>
+                <div class="container"></div>
+                <div class="modal-body">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary px-4 py-2 mx-2" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+<script>
+    $(function () {
+     let view_details = document.getElementsByClassName("viewDetails");
+
+     for (var i = 0; i < view_details.length; i++) {
+        view_details[i].addEventListener("click", function (item) {
+             
+             let lj_id = document.getElementById("lj_id").value
+             current_location = window.location.href
+             position = current_location.lastIndexOf("/")
+             origin = current_location.substring(0, position - 11)
+             replace_url = "/selectSavedLearningJourney/" + item.target.value;
+             window.location.replace(replace_url)
+         });
+     }
+ })
+</script>

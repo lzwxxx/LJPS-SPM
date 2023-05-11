@@ -1,0 +1,86 @@
+<style>
+    #setLJ {
+      font-weight: bold;
+    }
+</style>
+
+<!doctype html>
+<html lang="en">
+
+<head>
+  <title>LJPS - Set Learning Journey - Select Role</title>
+
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
+
+
+</head>
+
+<body class="bg-light">
+    {% include "nav.html" %}
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col align-self-start">
+                <h3>Step 1: Select a Role</h3>
+            </div>
+        </div>
+    <br>
+    <div class="row">
+        <div class="col">
+            {% if all_roles["code"] == 404 %}
+            <div class="alert alert-danger text-center">{{ all_roles['message'] }}
+            </div>
+            {% elif roles_available["roles_available"]|length < 1 %}
+            <div class="alert alert-danger text-center">There are no available roles yet.
+            </div>
+            {% else %}
+            <table class="table table-hover">
+                <thead>
+                    <tr style="background-color:#7ca8c8; color:#fff;">
+                        <th scope="col" style="width: 85%;">Role Name</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for role_info in roles_available["roles_available"] %}
+                    <tr>
+                        <th class="align-middle" style="font-size: 20px;">{{role_info["role_name"]}}
+                        </th>
+                        <td>
+                            <button class="btn btn-primary px-4 py-2 mx-2 viewSkills" role="button" value="{{ role_info['role_id'] }}">View Skills</button>
+                            <input type="text" value="{{role_info['role_id']}}" id="role_id" hidden>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif%}
+        </div>    
+    </div>
+
+    <!-- <div class="row">
+        <div class="col">
+            <button type="submit" class="btn btn-danger back" id="back" style="padding:5px 30px; float:left;">
+                Back 
+            </button>
+        </div>
+    </div> -->
+</body>
+</html>
+
+<script>
+     $(function () {
+      let view_skills = document.getElementsByClassName("viewSkills");
+
+      for (var i = 0; i < view_skills.length; i++) {
+        view_skills[i].addEventListener("click", function (item) {
+              // get the role id
+              let role_id = document.getElementById("role_id").value
+              current_location = window.location.href
+              position = current_location.lastIndexOf("/")
+              origin = current_location.substring(0, position - 11)
+              replace_url = "/selectSkill/" + item.target.value;
+              window.location.replace(replace_url)
+          });
+      }
+  })
+</script>

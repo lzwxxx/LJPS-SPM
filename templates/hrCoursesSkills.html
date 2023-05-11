@@ -1,0 +1,256 @@
+  <!doctype html>
+  <html lang="en">
+    <head>
+        <title>LJPS - Assign Skills to Course</title>
+        <script type="text/javascript" src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
+        <script>
+            current_location = window.location.href
+            position = current_location.lastIndexOf("/")
+            course_id = current_location.substring(position + 1)
+            
+            function removeSkill(element) {
+                $('#myModal3').modal({
+                    show: true
+                });
+
+                $("#myModal2").on('show.bs.modal', function (e) {
+                    $("#myModal3").modal("hide");
+
+                    $.ajax({
+                        type: "DELETE",
+                        cache: false,
+                        url: "/remove_skill_course/" + element.value + "/" + course_id,
+                        success: function (data) {
+                            //console.log(data["data"])
+                            $("#modalTitle").text("Removed Skill from Course Successfully");
+
+                            $(".modal-body").text("The skill has been removed from the course successfully");
+
+                            $('#myModal2').on('hidden.bs.modal', function (e) {
+                                location.reload()
+                            })
+                        },
+                        error: function (error) {
+                            //console.log(error["responseJSON"]["message"])
+                            $("#modalTitle").text("Removed Skill from Course Unsuccessfully");
+                            //$(".modal-body").text("Unable to update course name");
+                            $(".modal-body").text(error["responseJSON"]["message"]);
+                        }
+
+                    });
+                });
+            }
+
+            function assignSkill(element) {
+                $('#myModal1').modal({
+                    show: true
+                });
+
+                $("#myModal2").on('show.bs.modal', function (e) {
+                    $("#myModal1").modal("hide");
+
+                    $.ajax({
+                        type: "POST",
+                        cache: false,
+                        url: "/add_skill_course/" + element.value + "/" + course_id,
+                        success: function (data) {
+                            //console.log(data["data"])
+                            $("#modalTitle").text("Assigned Skill to Course Successfully");
+
+                            $(".modal-body").text("The skill has been assigned to the course successfully");
+
+                            $('#myModal2').on('hidden.bs.modal', function (e) {
+                                location.reload()
+                            })
+                        },
+                        error: function (error) {
+                            //console.log(error["responseJSON"]["message"])
+                            $("#modalTitle").text("Assigned Skill to Course Unsuccessfully");
+                            //$(".modal-body").text("Unable to update course name");
+                            $(".modal-body").text(error["responseJSON"]["message"]);
+                        }
+
+                    });
+                });
+            }
+
+            function closeModal(){
+                $('#myModal3').on('hide.bs.modal', function() {
+                    location.reload();
+                })
+                $('#myModal1').on('hide.bs.modal', function() {
+                    location.reload();
+                })
+            }
+
+            $(function () {
+                const element = document.getElementById("back");
+                element.addEventListener("click", function (item) {
+                    replace_url = "/course";
+                    window.location.replace(replace_url)
+                });
+            });
+        </script>
+    </head>
+
+    <body>
+      <!-- navbar -->
+      {% include "nav.html" %}
+      <!--<div id="nav-placeholder"></div>-->
+      <!--Assigning skills to course-->
+      <div class="container-fluid py-4" >
+        <div class="row">
+            <div class="col align-self-start">
+                <h3>Assign Skills to <span style="color: #447cae">{{course_info["data"]["course_name"]}}</span></h3>
+            </div>
+        </div>
+        <br>
+        <div class="row">
+            <div class="col-md-6">
+
+                <!--Alert message to show when there is no assigned skills-->
+                {% if assigned_info['code'] == 404 %}
+                <div class="alert alert-danger" role="alert">
+                    {{assigned_info['message']}}
+                </div>
+                {% elif assigned_info['code'] == 500 %}
+                <div class="alert alert-danger">
+                    {{ assigned_info['message'] }}
+                </div>
+                {% elif skills_assigned['skills_assigned']|length < 1 %}
+                <div class="alert alert-danger">
+                    No skills assigned for this course.
+                </div>
+                {% else %}
+                <table class="table table-responsive-sm table-hover">
+                    
+                    {% if assigned_info['code'] == 200 %}
+                    <thead>
+                        <tr style="background-color:#7ca8c8; color:#fff;">
+                            <th scope="col" style="width: 80%;">Assigned Skills</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        {% for assigned_skill_info in skills_assigned["skills_assigned"]%}
+                        <tr>
+                            <th class="align-middle" style="font-size: 20px;">{{assigned_skill_info["skill_name"]}}</th>
+                            <td><button class="btn btn-danger px-4 py-2 mx-2" type="submit" value="{{assigned_skill_info['skill_id']}}" onClick="return removeSkill(this)">Remove</button></td>
+                        </tr>
+                        {% endfor %}
+                        {% endif %}
+
+                    </tbody>
+                </table>
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                <!--Alert message to show when there is no available skills-->
+                {% if skills_unassigned["skills_unassigned"]|length < 1 %}
+                    <div class="alert alert-danger" role="alert">
+                        No skill available for this course.
+                    </div>
+                {% else %}
+                <table class="table table-responsive-sm table-hover">
+                    <thead>
+                        <tr style="background-color:#7ca8c8; color:#fff;">
+                            <th scope="col"  style="width: 80%;">Available Skills</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        {% for unassigned_skill_info in skills_unassigned["skills_unassigned"] %}
+                        <tr>
+                            <th class="align-middle"  style="font-size: 20px;">{{unassigned_skill_info["skill_name"]}}</th>
+                            <td><button class="btn btn-success px-4 py-2 mx-2" type="submit" value="{{unassigned_skill_info['skill_id']}}" onClick="return assignSkill(this)">Assign</button></td>
+                        </tr>
+                        {% endfor %}
+                                 
+                    </tbody>
+                </table>
+                {% endif %}
+
+            </div>
+        </div>
+
+    <br>
+    <div class="row">
+        <div class="col">
+            <button type="submit" class="btn btn-danger back px-4 py-2" id="back" style="padding:5px 30px; float:left;">
+                Back to Course Management
+            </button>
+        </div>
+    </div>
+            <div class="modal" id="myModal1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title">Confirmation</h4>
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true" onClick="return closeModal()" >×</button>
+                        </div>
+                        <div class="container"></div>
+                        <div class="modal-body">
+                            Are you sure you want to assign this skill to the course?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary px-4 py-2 mx-2" data-dismiss="modal" onClick="return closeModal()" >No</button>
+                            <button type="button" class="btn btn-primary px-4 py-2 mx-2" data-toggle="modal"
+                                href="#myModal2">Yes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal" id="myModal2" data-backdrop="static">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title" id="modalTitle"></h4>
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        </div>
+                        <div class="container"></div>
+                        <div class="modal-body">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary px-4 py-2 mx-2" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal" id="myModal3">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title">Confirmation</h4>
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true" onClick="return closeModal()" >×</button>
+                        </div>
+                        <div class="container"></div>
+                        <div class="modal-body">
+                            Are you sure you want to remove this skill from the course?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary px-4 py-2 mx-2" data-dismiss="modal" onClick="return closeModal()" >No</button>
+                            <button type="button" class="btn btn-primary px-4 py-2 mx-2" data-toggle="modal"
+                                href="#myModal2">Yes</button>               
+                        </div>
+                    </div>
+                </div>
+            </div>
+        
+        </div>
+    </body>
+  </html>
+
+  <!--<script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+  <script>
+  $(function(){
+      $("#nav-placeholder").load("nav.html", function(){
+            //$('#CoursesNav').css('font-weight', 'bold')
+      });
+  });
+
+
+  </script>-->
