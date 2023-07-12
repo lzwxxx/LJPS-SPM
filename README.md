@@ -1,7 +1,5 @@
 # LJPS-SPM
 
-Github repo link: https://github.com/yyiiinn/LJPS-SPM.git
- 
 ==================
 INSTALLATION GUIDE
 ==================
